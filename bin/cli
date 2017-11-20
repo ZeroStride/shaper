@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "shaper"
+require "time"
+require "ruby-progressbar"
+require "curses"
+require "paint"
+
+Curses.init_screen
+Curses.curs_set(0) # Invisible curor
+
+MAX_LINES = 30
+
+slot_to_emoji = {
+  main_hand: "⚔️",
+  off_hand: "⚔️",
+  right_ring: "💍",
+  left_ring: "💍",
+  amulet: "📿",
+  helm: "🎩",
+  boots: "👢",
+  bodyarmour: "👕",
+  gloves: "🥊"
+}
+
+stat_to_color = {
+  str: :red,
+  dex: :green,
+  int: :blue
+}
+
+CORRUPTED_COLOR = "a66"
+GREY_COLOR = "999"
+
+begin
+  character_items = Shaper::CharacterItems.new('ZeroStride', 'ExplodeCat')
+  loop do
+    Curses.clear
+
+    # Render
+
+    # Find longest gem name
+    longest_gem_name = 0
+    character_items.gems.each do |gem_item|
+      longest_gem_name = gem_item[:name].length > longest_gem_name ? gem_item[:name].length : longest_gem_name
+    end
+
+    # Draw one line per gem
+    all_gems = character_items.gems.sort_by { |gem_item| gem_item[:experience] }.reverse
+    line = 0
+    all_gems.each do |gem_item|
+      Curses.setpos(line, 0)
+      primary_stat = gem_item[:requirements].select { |requirement| [:dex, :str, :int].include? requirement }.sort_by { |key, value| value }.first.first
+      exp_columns = (gem_item[:experience] * 40).to_i
+      quality = Paint["(#{'%2.d' % gem_item[:level]}/20)", if gem_item[:corrupted] then CORRUPTED_COLOR else GREY_COLOR end]
+      bar_color = (gem_item[:corrupted] and gem_item[:level] >= 20 ) ? GREY_COLOR : stat_to_color[primary_stat]
+      exp_bar = "#{Paint['█' * exp_columns, bar_color]}#{' ' * (40 - exp_columns)}"
+      gem_name = Paint[gem_item[:name], :underline]
+      str = "\r#{(' ' * (longest_gem_name - gem_item[:name].length))} #{gem_name} #{slot_to_emoji[gem_item[:socketed_in]]}  #{quality} #{exp_bar}"
+      print str
+      Curses.refresh
+
+      line += 1
+      break if line == MAX_LINES
+    end
+
+    # Time to next update
+    update_frequency_ms = 10000.0 # Ten seconds
+    sleep_start_ms = DateTime.now.strftime('%Q').to_f
+    unsleep_ms = sleep_start_ms + update_frequency_ms
+
+    # Remaining time display
+    Curses.setpos(MAX_LINES + 1, 0)
+
+    display_frequency_ms = 1000.0
+
+    progressbar = ProgressBar.create({
+      length: 50,
+      format: "Next update %B %e",
+      progress_mark: '.',
+      remainder_mark:'+',
+      total:update_frequency_ms
+    })
+
+    loop do
+      now_ms = DateTime.now.strftime('%Q').to_f
+      progressbar.progress = now_ms > unsleep_ms ? update_frequency_ms : now_ms - sleep_start_ms 
+
+      Curses.refresh
+      break if now_ms >= unsleep_ms
+      sleep(display_frequency_ms / 1000.0)
+    end
+    #Curses.flash
+  end
+ensure
+  Curses.close_screen
+end

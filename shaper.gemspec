@@ -34,4 +34,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest"
 
   spec.add_dependency "httparty"
+
+  # For CLI
+  spec.add_dependency "curses"
+  spec.add_dependency "ruby-progressbar"
+  spec.add_dependency "paint"
 end
