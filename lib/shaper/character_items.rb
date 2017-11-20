@@ -27,21 +27,27 @@ module Shaper
         item["socketedItems"].each do |socketed_item|
           @raw_gems << socketed_item
 
-          gem = Shaper::Parse.socketed_item(socketed_item).merge({
+          gem_item = Shaper::Parse.socketed_item(socketed_item).merge({
             socketed_in: Shaper::Parse.inventory_id(item["inventoryId"])
           })
 
-          @gems << gem
+          @gems << gem_item
 
-          @gems_by_name[gem[:name]] ||= []
-          @gems_by_name[gem[:name]] << gem.reject { |key, value| key == :name }
+          @gems_by_name[gem_item[:name]] ||= []
+          @gems_by_name[gem_item[:name]] << gem_item.reject { |key, value| key == :name }
 
-          @gems_by_slot[gem[:socketed_in]] ||= []
-          @gems_by_slot[gem[:socketed_in]] << gem
+          @gems_by_slot[gem_item[:socketed_in]] ||= []
+          @gems_by_slot[gem_item[:socketed_in]] << gem_item
         end
       end
+    end
 
-      puts @gems_by_name.inspect
+    def gems
+      @gems
+    end
+
+    def gems_by_name
+      @gems_by_name
     end
   end
 end
