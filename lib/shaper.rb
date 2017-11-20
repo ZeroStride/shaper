@@ -1,5 +1,13 @@
 require "shaper/version"
+require "shaper/character_items"
+require "shaper/utils"
 
 module Shaper
-  # Your code goes here...
+  Auth = {
+
+  }
+
+  Config = {
+
+  }
 end
