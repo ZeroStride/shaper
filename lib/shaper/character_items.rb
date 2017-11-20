@@ -19,20 +19,29 @@ module Shaper
 
       @raw_items = response["items"]
 
+      @gems = []
       @raw_gems = []
-      @gems = {}
+      @gems_by_name = {}
+      @gems_by_slot = {}
       @raw_items.each { |i| not i["socketedItems"].empty? }.collect do |item|
-        item["socketedItems"].each do |gem|
-          @raw_gems << gem
+        item["socketedItems"].each do |socketed_item|
+          @raw_gems << socketed_item
 
-          @gems[gem["typeLine"]] ||= []
-          @gems[gem["typeLine"]] << {
+          gem = Shaper::Parse.socketed_item(socketed_item).merge({
             socketed_in: Shaper::Parse.inventory_id(item["inventoryId"])
-          }
+          })
+
+          @gems << gem
+
+          @gems_by_name[gem[:name]] ||= []
+          @gems_by_name[gem[:name]] << gem.reject { |key, value| key == :name }
+
+          @gems_by_slot[gem[:socketed_in]] ||= []
+          @gems_by_slot[gem[:socketed_in]] << gem
         end
       end
 
-      puts @gems.inspect
+      puts @gems_by_name.inspect
     end
   end
 end
