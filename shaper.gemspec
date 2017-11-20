@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["zerostride@gmail.com"]
 
   spec.summary       = %q{Path of Exile API tools}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.homepage      = "https://github.com/ZeroStride/shaper"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
